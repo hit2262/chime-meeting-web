@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Chime Join</title>
+  <script src="https://unpkg.com/amazon-chime-sdk-js@3.0.1/build/amazon-chime-sdk.min.js"></script>
+</head>
+<body>
+  <h2>회의 참가 중...</h2>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const meetingId = urlParams.get('meetingId');
+    const attendeeId = urlParams.get('attendeeId');
+    const joinToken = urlParams.get('joinToken');
+
+    const meetingSessionConfiguration = new ChimeSDK.MeetingSessionConfiguration(
+      {
+        MeetingId: meetingId,
+        MediaRegion: 'ap-northeast-2',
+        MediaPlacement: {
+          AudioHostUrl: '', // 생략 가능
+        }
+      },
+      {
+        AttendeeId: attendeeId,
+        JoinToken: joinToken,
+      }
+    );
+
+    const logger = new ChimeSDK.ConsoleLogger('ChimeLogs', ChimeSDK.LogLevel.INFO);
+    const deviceController = new ChimeSDK.DefaultDeviceController(logger);
+
+    const meetingSession = new ChimeSDK.DefaultMeetingSession(
+      meetingSessionConfiguration,
+      logger,
+      deviceController
+    );
+
+    async function startMeeting() {
+      await meetingSession.audioVideo.start();
+      console.log("🎉 회의 참가 완료");
+    }
+
+    startMeeting();
+  </script>
+</body>
+</html>
