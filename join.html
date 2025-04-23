@@ -8,19 +8,23 @@
   <h2>회의 참가 중...</h2>
   <video id="video" autoplay muted playsinline style="width: 100%; max-width: 400px; border: 1px solid #ccc;"></video>
 
-  <!-- ✅ Chime SDK 불러오기 -->
-  <script src="https://unpkg.com/amazon-chime-sdk-js@3.0.1/build/amazon-chime-sdk.min.js"></script>
+  <!-- ✅ Chime SDK 로딩 (브라우저용 글로벌 버전) -->
+  <script src="https://unpkg.com/amazon-chime-sdk-js@3.0.1/dist/amazon-chime-sdk.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      // ✅ ChimeSDK 네임스페이스는 없음, 객체들 직접 접근해야 함
+      if (!window.ChimeSDK) {
+        console.error("❌ ChimeSDK is not defined (아직 로드되지 않음)");
+        return;
+      }
+
       const {
         ConsoleLogger,
         DefaultDeviceController,
         DefaultMeetingSession,
         LogLevel,
         MeetingSessionConfiguration
-      } = window;
+      } = ChimeSDK;
 
       const urlParams = new URLSearchParams(window.location.search);
       const meetingId = urlParams.get('meetingId');
