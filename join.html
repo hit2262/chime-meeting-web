@@ -1,55 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Chime Join</title>
-  <script src="https://unpkg.com/amazon-chime-sdk-js@3.0.1/build/amazon-chime-sdk.min.js"></script>
-  <script>
-  const {
-    ConsoleLogger,
-    DefaultDeviceController,
-    DefaultMeetingSession,
-    LogLevel,
-    MeetingSessionConfiguration
-  } = window.ChimeSDK;
-
-  // 이제 이걸로 meetingSession 구성 가능
-  </script>
+  <meta charset="UTF-8" />
+  <title>Amazon Chime Join</title>
 </head>
 <body>
   <h2>회의 참가 중...</h2>
+  <video id="video" autoplay muted playsinline style="width: 100%; max-width: 400px; border: 1px solid #ccc;"></video>
+
+  <!-- Chime SDK 로딩 -->
+  <script src="https://unpkg.com/amazon-chime-sdk-js@3.0.1/build/amazon-chime-sdk.min.js"></script>
+
   <script>
+    // Chime SDK 객체 구조 분해 할당
+    const {
+      ConsoleLogger,
+      DefaultDeviceController,
+      DefaultMeetingSession,
+      LogLevel,
+      MeetingSessionConfiguration
+    } = ChimeSDK;
+
+    // URL 파라미터에서 값 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     const meetingId = urlParams.get('meetingId');
     const attendeeId = urlParams.get('attendeeId');
     const joinToken = urlParams.get('joinToken');
 
-    const meetingSessionConfiguration = new ChimeSDK.MeetingSessionConfiguration(
+    // MeetingSession 설정
+    const meetingSessionConfiguration = new MeetingSessionConfiguration(
       {
         MeetingId: meetingId,
-        MediaRegion: 'ap-northeast-2',
-        MediaPlacement: {
-          AudioHostUrl: '', // 생략 가능
-        }
+        MediaRegion: 'ap-northeast-2'
       },
       {
         AttendeeId: attendeeId,
-        JoinToken: joinToken,
+        JoinToken: joinToken
       }
     );
 
-    const logger = new ChimeSDK.ConsoleLogger('ChimeLogs', ChimeSDK.LogLevel.INFO);
-    const deviceController = new ChimeSDK.DefaultDeviceController(logger);
+    const logger = new ConsoleLogger('ChimeLogs', LogLevel.INFO);
+    const deviceController = new DefaultDeviceController(logger);
 
-    const meetingSession = new ChimeSDK.DefaultMeetingSession(
+    const meetingSession = new DefaultMeetingSession(
       meetingSessionConfiguration,
       logger,
       deviceController
     );
 
     async function startMeeting() {
-      await meetingSession.audioVideo.start();
-      console.log("🎉 회의 참가 완료");
+      try {
+        await meetingSession.audioVideo.start();
+
+        // 카메라 바인딩
+        const videoElement = document.getElementById("video");
+        meetingSession.audioVideo.bindVideoElement("video", videoElement);
+
+        // 로컬 비디오 시작
+        const devices = await meetingSession.audioVideo.listVideoInputDevices();
+        if (devices.length > 0) {
+          await meetingSession.audioVideo.chooseVideoInputDevice(devices[0].deviceId);
+          await meetingSession.audioVideo.startLocalVideoTile();
+        }
+
+        console.log("🎉 회의 참가 완료");
+      } catch (err) {
+        console.error("❌ 회의 참가 중 오류:", err);
+      }
     }
 
     startMeeting();
